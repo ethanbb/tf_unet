@@ -51,8 +51,8 @@ class BaseDataProvider(object):
         
         train_data, labels = self._post_process(train_data, labels)
         
-        nx = data.shape[1]
-        ny = data.shape[0]
+        nx = train_data.shape[1]
+        ny = train_data.shape[0]
 
         return train_data.reshape(1, ny, nx, self.channels), labels.reshape(1, ny, nx, self.n_class),
     
@@ -111,6 +111,8 @@ class SimpleDataProvider(BaseDataProvider):
     :param label: label numpy array. Shape=[n, X, Y, classes]
     :param a_min: (optional) min value used for clipping
     :param a_max: (optional) max value used for clipping
+    :param channels: (optional) number of channels, default=1
+    :param n_class: (optional) number of classes, default=2
     
     """
     
@@ -142,19 +144,25 @@ class ImageDataProvider(BaseDataProvider):
     :param a_max: (optional) max value used for clipping
     :param data_suffix: suffix pattern for the data images. Default '.tif'
     :param mask_suffix: suffix pattern for the label images. Default '_mask.tif'
+    :param shuffle_data: if the order of the loaded file path should be randomized. Default 'True'
+    :param channels: (optional) number of channels, default=1
+    :param n_class: (optional) number of classes, default=2
     
     """
     
-    n_class = 2
-    
-    def __init__(self, search_path, a_min=None, a_max=None, data_suffix=".tif", mask_suffix='_mask.tif'):
+    def __init__(self, search_path, a_min=None, a_max=None, data_suffix=".tif", mask_suffix='_mask.tif', shuffle_data=True, n_class = 2):
         super(ImageDataProvider, self).__init__(a_min, a_max)
         self.data_suffix = data_suffix
         self.mask_suffix = mask_suffix
         self.file_idx = -1
+        self.shuffle_data = shuffle_data
+        self.n_class = n_class
         
         self.data_files = self._find_data_files(search_path)
-    
+        
+        if self.shuffle_data:
+            np.random.shuffle(self.data_files)
+        
         assert len(self.data_files) > 0, "No training files"
         print("Number of files used: %s" % len(self.data_files))
         
@@ -163,7 +171,7 @@ class ImageDataProvider(BaseDataProvider):
         
     def _find_data_files(self, search_path):
         all_files = glob.glob(search_path)
-        return [name for name in all_files if not self.mask_suffix in name]
+        return [name for name in all_files if self.data_suffix in name and not self.mask_suffix in name]
     
     
     def _load_file(self, path, dtype=np.float32):
@@ -174,6 +182,8 @@ class ImageDataProvider(BaseDataProvider):
         self.file_idx += 1
         if self.file_idx >= len(self.data_files):
             self.file_idx = 0 
+            if self.shuffle_data:
+                np.random.shuffle(self.data_files)
         
     def _next_data(self):
         self._cylce_file()
