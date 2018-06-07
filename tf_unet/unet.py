@@ -204,7 +204,8 @@ class Unet(object):
 
     def _get_cost(self, logits, cost_name, cost_kwargs):
         """
-        Constructs the cost function, either cross_entropy, weighted cross_entropy or dice_coefficient.
+        Constructs the cost function, either cross_entropy, weighted cross_entropy,
+        dice_coefficient, or iou (intersection over union).
         Optional arguments are:
         class_weights: weights for the different classes in case of multi-class imbalance
         regularizer: power of the L2 regularizers added to the loss function
