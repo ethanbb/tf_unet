@@ -236,9 +236,9 @@ class Unet(object):
             prediction = pixel_wise_softmax_2(logits)
             A_intersect_B = tf.reduce_sum(prediction * self.y, axis=[0, 1, 2])
             A_plus_B =  tf.reduce_sum(prediction, axis=[0, 1, 2]) + tf.reduce_sum(self.y, axis=[0, 1, 2])
-            if cost_name == "dice_coefficient"
+            if cost_name == "dice_coefficient":
                 denominator = A_plus_B
-            else # intersection over union
+            else: # intersection over union
                 A_union_B = A_plus_B - A_intersect_B
                 denominator = A_union_B
             loss = tf.reduce_sum(-(2 * A_intersect_B / (eps + denominator)))
